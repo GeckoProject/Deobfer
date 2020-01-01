@@ -7,23 +7,25 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Mappings {
 
     private List<ClassMapping> classes = new ArrayList<>();
-    private List<FieldMapping> fields = new ArrayList<>();
-    private List<MethodMapping> methods = new ArrayList<>();
+    private Map<ClassMapping,List<FieldMapping>> fields = new HashMap<>();
+    private Map<ClassMapping,List<MethodMapping>> methods = new HashMap<>();
 
     public List<ClassMapping> getClasses() {
         return classes;
     }
 
-    public List<FieldMapping> getFields() {
+    public Map<ClassMapping,List<FieldMapping>> getFields() {
         return fields;
     }
 
-    public List<MethodMapping> getMethods() {
+    public Map<ClassMapping,List<MethodMapping>> getMethods() {
         return methods;
     }
 
@@ -33,7 +35,8 @@ public class Mappings {
         FileInputStream inputStream = new FileInputStream(file);
         List<String> lines = IOUtils.readLines(inputStream, Charset.defaultCharset());
 
-        String currentClass = "";
+        String currentClass = null;
+        ClassMapping currentClassMapping = null;
 
         Mappings ret = new Mappings();
 
@@ -41,8 +44,9 @@ public class Mappings {
             if (!line.startsWith("\t")) { // Class line
                 String[] names = line.trim().split(" ");
                 currentClass = names[0];
+                currentClassMapping = new ClassMapping(names[1], names[0]);
 
-                ret.addClass(new ClassMapping(names[1], names[0]));
+                ret.addClass(currentClassMapping);
             } else {
                 if (currentClass == null)
                     throw new IOException("Illegal SRG file!");
@@ -52,7 +56,7 @@ public class Mappings {
                 if (ln.split(" ").length == 2) { // Fields
                     String[] names = ln.split(" ");
 
-                    ret.addField(new FieldMapping(names[1], names[0], currentClass));
+                    ret.addField(new FieldMapping(names[1], names[0], currentClass), currentClassMapping);
                 } else if (ln.split(" ").length == 3) { // Methods
                     String[] parts = ln.split(" ");
 
@@ -60,7 +64,7 @@ public class Mappings {
                     String desc = parts[1];
                     String orgName = parts[2];
 
-                    ret.addMethod(new MethodMapping(orgName, obfName, desc, currentClass));
+                    ret.addMethod(new MethodMapping(orgName, obfName, desc, currentClass), currentClassMapping);
                 }
             }
         }
@@ -70,13 +74,23 @@ public class Mappings {
 
     private void addClass(ClassMapping mapping) {
         this.classes.add(mapping);
+        this.fields.put(mapping, new ArrayList<>());
+        this.methods.put(mapping, new ArrayList<>());
     }
 
-    private void addField(FieldMapping mapping) {
-        this.fields.add(mapping);
+    private void addField(FieldMapping mapping, ClassMapping classMapping) {
+        this.fields.get(classMapping).add(mapping);
     }
 
-    private void addMethod(MethodMapping mapping) {
-        this.methods.add(mapping);
+    private void addMethod(MethodMapping mapping, ClassMapping classMapping) {
+        this.methods.get(classMapping).add(mapping);
+    }
+
+    public ClassMapping findClass(String obfName) {
+        for (ClassMapping cls : this.classes) {
+            if (cls.getObfName().equals(obfName))
+                return cls;
+        }
+        return null;
     }
 }

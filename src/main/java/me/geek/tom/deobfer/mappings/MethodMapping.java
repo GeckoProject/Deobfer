@@ -29,4 +29,10 @@ public class MethodMapping {
         this.desc = desc;
         this.className = className;
     }
+
+    public boolean shouldRename(String currentName, String currentDesc) {
+        if (this.getObfName().equals(currentName))
+            return this.getDesc().equals(currentDesc);
+        return false;
+    }
 }
