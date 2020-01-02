@@ -26,4 +26,10 @@ public class ClassProccessor {
 
         output.write(writer.toByteArray());
     }
+
+    public byte[] apply(ClassVisitor cv) {
+        this.reader.accept(cv, 0);
+
+        return writer.toByteArray();
+    }
 }

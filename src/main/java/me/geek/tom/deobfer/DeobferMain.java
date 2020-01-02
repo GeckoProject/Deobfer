@@ -20,18 +20,29 @@ public class DeobferMain {
     private void run(String[] args) throws Exception {
         System.out.println("Deobfer says: 'Hello, World!'");
 
-        String class_name = "ctz";
+        String class_name = "ctp";
 
         loadMappings(new File("./testdata/client.srg"));
-        doMethodRenaming(new File("./testdata/" + class_name + ".class"), new File("./testdata/" + class_name + "_remapped.class"));
+        doMethodRenaming(new File("./testdata/" + class_name + ".class"), new File("./testdata/out/"));
     }
 
-    private void doMethodRenaming(File input, File output) throws IOException {
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private void doMethodRenaming(File input, File outputDir) throws IOException {
+        if (!outputDir.isDirectory() || !outputDir.exists())
+            outputDir.mkdir();
+
         ClassProccessor proccessor = new ClassProccessor(new FileInputStream(input));
 
         ClassRenamer renamer = new ClassRenamer(proccessor.getWriter(), mappings);
 
-        proccessor.apply(new FileOutputStream(output), renamer);
+        byte[] out = proccessor.apply(renamer);
+
+        File output = new File(outputDir, renamer.getName() + ".class");
+
+        if (!output.getParentFile().exists())
+            output.getParentFile().mkdirs();
+
+        new FileOutputStream(output).write(out);
     }
 
     private void loadMappings(File mappingsFile) throws IOException {
