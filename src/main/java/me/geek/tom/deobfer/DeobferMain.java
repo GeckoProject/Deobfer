@@ -2,32 +2,57 @@ package me.geek.tom.deobfer;
 
 import me.geek.tom.deobfer.asm.ClassProccessor;
 import me.geek.tom.deobfer.asm.ClassRenamer;
-import me.geek.tom.deobfer.asm.CustomClassWriter;
-import me.geek.tom.deobfer.asm.reader.CustomClassReader;
+import me.geek.tom.deobfer.filesystem.RemappingTreeWalker;
 import me.geek.tom.deobfer.mappings.Mappings;
-import org.objectweb.asm.ClassReader;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 public class DeobferMain {
 
     private Mappings mappings;
+
+    public static Logger LOGGER = Logger.getLogger("Deobfer");
+
+    static {
+        // Configure logging
+        InputStream stream = DeobferMain.class.getClassLoader().
+                getResourceAsStream("logging.properties");
+        try {
+            LogManager.getLogManager().readConfiguration(stream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void main(String[] args) throws Exception {
         new DeobferMain().run(args);
     }
 
     private void run(String[] args) throws Exception {
-        System.out.println("Deobfer says: 'Hello, World!'");
-
-        String class_name = "ctp";
+        LOGGER.info("Deobfer says: 'Hello, World!'");
 
         loadMappings(new File("./testdata/client.srg"));
-        doMethodRenaming(new File("./testdata/" + class_name + ".class"), new File("./testdata/out/"));
+
+        walkTreeAndRemap(new File("./testdata/client/"), new File("./testdata/out/"));
+    }
+
+    private void walkTreeAndRemap(File startDir, File outputDir) throws IOException {
+        RemappingTreeWalker walker = new RemappingTreeWalker();
+
+        Files.walkFileTree(startDir.toPath(), walker);
+
+        for (Path p : walker.getFileQueue()) {
+            LOGGER.info("Remapping file: " + p.toString());
+            doClassRenaming(p.toFile(), outputDir);
+        }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void doMethodRenaming(File input, File outputDir) throws IOException {
+    private void doClassRenaming(File input, File outputDir) throws IOException {
         if (!outputDir.isDirectory() || !outputDir.exists())
             outputDir.mkdir();
 
@@ -52,22 +77,12 @@ public class DeobferMain {
         int fieldCount = mappings.getFields().size();
         int methodCount = mappings.getMethods().size();
 
-        System.out.println("Mappings found " + classCount + " classes, " + fieldCount + " fields and " + methodCount + " methods to rename");
+        LOGGER.info("Mappings found " + classCount + " classes, " + fieldCount + " fields and " + methodCount + " methods to rename");
     }
 
-    private void readClass(File classFile) throws Exception {
+    /* private void readClass(File classFile) throws Exception {
 
         ClassReader reader = new ClassReader(new FileInputStream(classFile));
         reader.accept(new CustomClassReader(), 0);
-    }
-
-    private void injector() throws Exception {
-        CustomClassWriter testWriter = new CustomClassWriter("java.lang.Integer");
-
-        File output = new File("./Integer.class");
-
-        FileOutputStream outputStream = new FileOutputStream(output);
-
-        outputStream.write(testWriter.addInterface());
-    }
+    } */
 }

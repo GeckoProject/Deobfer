@@ -1,5 +1,6 @@
 package me.geek.tom.deobfer.asm.injectors;
 
+import me.geek.tom.deobfer.DeobferMain;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Opcodes;
@@ -11,7 +12,7 @@ public class FieldInjector extends ClassVisitor {
     private boolean isFieldPresent;
 
     public FieldInjector(String fieldName, int fieldAccess, ClassVisitor cv) {
-        super(Opcodes.ASM4, cv);
+        super(Opcodes.ASM5, cv);
         this.cv = cv;
         this.fieldName = fieldName;
         this.access = fieldAccess;
@@ -19,7 +20,7 @@ public class FieldInjector extends ClassVisitor {
 
     @Override
     public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-        System.out.println("FieldAdder::visitField -> " + name);
+        DeobferMain.LOGGER.info("FieldAdder::visitField -> " + name);
 
         if (name.equals(fieldName)) {
             isFieldPresent = true;
@@ -30,10 +31,10 @@ public class FieldInjector extends ClassVisitor {
 
     @Override
     public void visitEnd() {
-        System.out.println("FieldAdder::visitEnd");
+        DeobferMain.LOGGER.info("FieldAdder::visitEnd");
 
         if (!isFieldPresent) {
-            System.out.println("FieldAdder adding field at end of class.");
+            DeobferMain.LOGGER.info("FieldAdder adding field at end of class.");
             FieldVisitor fv = cv.visitField(
                     access, fieldName, "C", null, null);
             if (fv != null) {

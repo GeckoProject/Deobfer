@@ -20,6 +20,12 @@
         </plugins>
     </build>
 
+    <repositories>
+        <repository>
+            <id>tomthegeek-repo</id>
+            <url>https://geek202.github.io/maven</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -36,6 +42,12 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.6</version>
+        </dependency>
+
+        <dependency>
+            <groupId>me.geek.tom</groupId>
+            <artifactId>JavaUtils</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>

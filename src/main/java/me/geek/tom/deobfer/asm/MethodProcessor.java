@@ -1,5 +1,6 @@
 package me.geek.tom.deobfer.asm;
 
+import me.geek.tom.deobfer.DeobferMain;
 import me.geek.tom.deobfer.Utils;
 import me.geek.tom.deobfer.mappings.ClassMapping;
 import me.geek.tom.deobfer.mappings.FieldMapping;
@@ -9,14 +10,14 @@ import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
-import static org.objectweb.asm.Opcodes.ASM4;
+import static org.objectweb.asm.Opcodes.ASM5;
 
 @SuppressWarnings("WeakerAccess")
 public class MethodProcessor extends MethodVisitor {
     private Mappings mappings;
 
     public MethodProcessor(MethodVisitor mv, Mappings mappings) {
-        super(ASM4, mv);
+        super(ASM5, mv);
         this.mappings = mappings;
     }
 
@@ -33,7 +34,7 @@ public class MethodProcessor extends MethodVisitor {
                 if (fm.getObfName().equals(name)) {
                     newName = fm.getOrgName();
                     newOwner = cm.getOrgName();
-                    System.out.println("[ Fields ] Rename reference of '" + owner + "." + name + "' to '" + newOwner + "." + newName + "'");
+                    DeobferMain.LOGGER.info("[ Fields ] Rename reference of '" + owner + "." + name + "' to '" + newOwner + "." + newName + "'");
                     break;
                 }
             }
@@ -55,7 +56,7 @@ public class MethodProcessor extends MethodVisitor {
             for (MethodMapping mm : mappings.getMethods().get(cm)) {
                 if (mm.getObfName().equals(name)) {
                     newName = mm.getOrgName();
-                    System.out.println("[ Method ] Rename call of '" + owner + "::" + name + "' to '" + newOwner + "::" + newName + "'");
+                    DeobferMain.LOGGER.info("[ Method ] Rename call of '" + owner + "::" + name + "' to '" + newOwner + "::" + newName + "'");
                     break;
                 }
             }
@@ -71,7 +72,7 @@ public class MethodProcessor extends MethodVisitor {
         String newType = type;
 
         if (cm != null) {
-            System.out.println("[  Type  ] Rename reference to type: '" + type + "' to '" + newType + "'");
+            DeobferMain.LOGGER.info("[  Type  ] Rename reference to type: '" + type + "' to '" + newType + "'");
             newType = cm.getOrgName();
         }
 
@@ -104,7 +105,7 @@ public class MethodProcessor extends MethodVisitor {
                             newName = mm.getOrgName();
                 }
 
-                System.out.println("[ Lambda ] Remapped handle to '" + newOwner + "::" + newName + "'");
+                DeobferMain.LOGGER.info("[ Lambda ] Remapped handle to '" + newOwner + "::" + newName + "'");
 
                 newBsmArgs[i] = new Handle(handle.getTag(), newOwner, newName, Utils.remapDesc(handle.getDesc(), mappings), handle.isInterface());
             } else {

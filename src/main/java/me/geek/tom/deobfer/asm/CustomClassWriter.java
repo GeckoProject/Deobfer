@@ -1,5 +1,6 @@
 package me.geek.tom.deobfer.asm;
 
+import me.geek.tom.deobfer.DeobferMain;
 import me.geek.tom.deobfer.asm.injectors.FieldInjector;
 import me.geek.tom.deobfer.asm.injectors.InterfaceInjector;
 import org.objectweb.asm.ClassReader;
@@ -19,22 +20,22 @@ public class CustomClassWriter {
     }
 
     public byte[] addInterface() {
-        System.out.println("Adding interface!");
+        DeobferMain.LOGGER.info("Adding interface!");
         InterfaceInjector interfaceInjector = new InterfaceInjector(writer, "me/geek/tom/deobfer/testing/ITestInterface");
 
         reader.accept(interfaceInjector, 0);
 
-        System.out.println("Interface addition complete!");
+        DeobferMain.LOGGER.info("Interface addition complete!");
         return writer.toByteArray();
     }
 
     public byte[] addField() {
-        System.out.println("Adding field!");
+        DeobferMain.LOGGER.info("Adding field!");
         FieldInjector fieldInjector = new FieldInjector("testField", Opcodes.ACC_PUBLIC, writer);
 
         reader.accept(fieldInjector, 0);
 
-        System.out.println("Field addition complete!");
+        DeobferMain.LOGGER.info("Field addition complete!");
 
         return writer.toByteArray();
     }

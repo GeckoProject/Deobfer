@@ -1,5 +1,6 @@
 package me.geek.tom.deobfer.asm;
 
+import me.geek.tom.deobfer.DeobferMain;
 import me.geek.tom.deobfer.Utils;
 import me.geek.tom.deobfer.mappings.FieldMapping;
 import me.geek.tom.deobfer.mappings.Mappings;
@@ -11,7 +12,7 @@ import org.objectweb.asm.MethodVisitor;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.objectweb.asm.Opcodes.ASM4;
+import static org.objectweb.asm.Opcodes.ASM5;
 
 public class ClassRenamer extends ClassVisitor {
     private Mappings mappings;
@@ -25,27 +26,27 @@ public class ClassRenamer extends ClassVisitor {
     }
 
     public ClassRenamer(ClassVisitor cv, Mappings mappings) {
-        super(ASM4, cv);
+        super(ASM5, cv);
         this.mappings = mappings;
     }
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        System.out.println("Visiting class: " + name);
+        DeobferMain.LOGGER.info("Visiting class: " + name);
 
         String newName = name;
         String newSuperName = superName;
         String[] newInterfaces = Arrays.copyOf(interfaces, interfaces.length);
 
         if (this.mappings.findClass(name) == null)
-            System.out.println("No mappings for class: " + name);
+            DeobferMain.LOGGER.info("No mappings for class: " + name);
         else {
             this.fields = this.mappings.getFields().get(this.mappings.findClass(name));
             this.methods = this.mappings.getMethods().get(this.mappings.findClass(name));
 
             this.name = Utils.remapClassName(name, mappings);
 
-            System.out.println("Loaded " + this.fields.size() + " field mappings and " + this.methods.size() + " method mappings.");
+            DeobferMain.LOGGER.info("Loaded " + this.fields.size() + " field mappings and " + this.methods.size() + " method mappings.");
 
             // Remap name
             newName = Utils.remapClassName(name, mappings);
@@ -79,7 +80,7 @@ public class ClassRenamer extends ClassVisitor {
 
         if (mapping != null) {
             newName = mapping.getOrgName();
-            System.out.println("[ Fields ] Renaming '" + name + "' to '" + newName + "'");
+            DeobferMain.LOGGER.info("[ Fields ] Renaming '" + name + "' to '" + newName + "'");
         }
 
         return super.visitField(access, newName, newDesc, signature, value);
@@ -94,7 +95,7 @@ public class ClassRenamer extends ClassVisitor {
         for (MethodMapping mp : methods) {
             if (mp.shouldRename(name, newDesc)) {
                 newName = mp.getOrgName();
-                System.out.println("[ Method ] Renaming '" + name + "' to '" + newName + "'");
+                DeobferMain.LOGGER.info("[ Method ] Renaming '" + name + "' to '" + newName + "'");
                 break;
             }
         }
