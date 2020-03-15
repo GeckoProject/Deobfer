@@ -1,5 +1,8 @@
 package me.geek.tom.deobfer;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 import me.geek.tom.deobfer.asm.ClassProccessor;
 import me.geek.tom.deobfer.asm.ClassRenamer;
 import me.geek.tom.deobfer.filesystem.RemappingTreeWalker;
@@ -33,12 +36,42 @@ public class DeobferMain {
         new DeobferMain().run(args);
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void run(String[] args) throws Exception {
         LOGGER.info("Deobfer says: 'Hello, World!'");
 
-        loadMappings(new File("./testdata/client.srg"));
+        OptionParser parser = new OptionParser();
+        parser.allowsUnrecognizedOptions();
+        OptionSpec<File> mappings = parser.accepts("mappings").withRequiredArg().ofType(File.class);
+        OptionSpec<File> input = parser.accepts("input").withRequiredArg().ofType(File.class);
+        OptionSpec<File> output = parser.accepts("output").withRequiredArg().ofType(File.class);
 
-        walkTreeAndRemap(new File("./testdata/client/"), new File("./testdata/out/"));
+        OptionSet options = parser.parse(args);
+        if (!options.has(mappings) || !options.has(input) || !options.has(output)) {
+            LOGGER.severe("Missing required attributes! Usage:");
+            parser.printHelpOn(System.out);
+            System.exit(1);
+        } else {
+            File mappingsFile = options.valueOf(mappings);
+            if (!mappingsFile.exists()) {
+                LOGGER.severe("Mappings file " + mappingsFile.getName() + " does not exist!");
+                System.exit(1);
+            }
+
+            File inputFile = options.valueOf(input);
+            if (!mappingsFile.exists()) {
+                LOGGER.severe("Input file " + inputFile.getName() + " does not exist!");
+                System.exit(1);
+            }
+
+            File outputFile = options.valueOf(output);
+
+            if (!outputFile.exists())
+                outputFile.mkdirs();
+
+            loadMappings(mappingsFile);
+            walkTreeAndRemap(inputFile, outputFile);
+        }
     }
 
     private void walkTreeAndRemap(File startDir, File outputDir) throws IOException {
