@@ -7,4 +7,4 @@ target/
 
 testdata/
 
-deobfer_*.log
+*.log
