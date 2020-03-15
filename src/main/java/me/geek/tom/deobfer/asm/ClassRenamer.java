@@ -32,7 +32,7 @@ public class ClassRenamer extends ClassVisitor {
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        DeobferMain.LOGGER.info("Visiting class: " + name);
+        DeobferMain.LOGGER.fine("Visiting class: " + name);
 
         String newName = name;
         String newSuperName = superName;
@@ -46,7 +46,7 @@ public class ClassRenamer extends ClassVisitor {
 
             this.name = Utils.remapClassName(name, mappings);
 
-            DeobferMain.LOGGER.info("Loaded " + this.fields.size() + " field mappings and " + this.methods.size() + " method mappings.");
+            DeobferMain.LOGGER.fine("Loaded " + this.fields.size() + " field mappings and " + this.methods.size() + " method mappings.");
 
             // Remap name
             newName = Utils.remapClassName(name, mappings);
@@ -80,7 +80,7 @@ public class ClassRenamer extends ClassVisitor {
 
         if (mapping != null) {
             newName = mapping.getOrgName();
-            DeobferMain.LOGGER.info("[ Fields ] Renaming '" + name + "' to '" + newName + "'");
+            DeobferMain.LOGGER.fine("[ Fields ] Renaming '" + name + "' to '" + newName + "'");
         }
 
         return super.visitField(access, newName, newDesc, signature, value);
@@ -95,7 +95,7 @@ public class ClassRenamer extends ClassVisitor {
         for (MethodMapping mp : methods) {
             if (mp.shouldRename(name, newDesc)) {
                 newName = mp.getOrgName();
-                DeobferMain.LOGGER.info("[ Method ] Renaming '" + name + "' to '" + newName + "'");
+                DeobferMain.LOGGER.fine("[ Method ] Renaming '" + name + "' to '" + newName + "'");
                 break;
             }
         }

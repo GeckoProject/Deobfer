@@ -7,6 +7,7 @@ import me.geek.tom.deobfer.mappings.FieldMapping;
 import me.geek.tom.deobfer.mappings.Mappings;
 import me.geek.tom.deobfer.mappings.MethodMapping;
 import org.objectweb.asm.Handle;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
@@ -34,7 +35,7 @@ public class MethodProcessor extends MethodVisitor {
                 if (fm.getObfName().equals(name)) {
                     newName = fm.getOrgName();
                     newOwner = cm.getOrgName();
-                    DeobferMain.LOGGER.info("[ Fields ] Rename reference of '" + owner + "." + name + "' to '" + newOwner + "." + newName + "'");
+                    DeobferMain.LOGGER.fine("[ Fields ] Rename reference of '" + owner + "." + name + "' to '" + newOwner + "." + newName + "'");
                     break;
                 }
             }
@@ -56,7 +57,7 @@ public class MethodProcessor extends MethodVisitor {
             for (MethodMapping mm : mappings.getMethods().get(cm)) {
                 if (mm.getObfName().equals(name)) {
                     newName = mm.getOrgName();
-                    DeobferMain.LOGGER.info("[ Method ] Rename call of '" + owner + "::" + name + "' to '" + newOwner + "::" + newName + "'");
+                    DeobferMain.LOGGER.fine("[ Method ] Rename call of '" + owner + "::" + name + "' to '" + newOwner + "::" + newName + "'");
                     break;
                 }
             }
@@ -72,11 +73,20 @@ public class MethodProcessor extends MethodVisitor {
         String newType = type;
 
         if (cm != null) {
-            DeobferMain.LOGGER.info("[  Type  ] Rename reference to type: '" + type + "' to '" + newType + "'");
+            DeobferMain.LOGGER.fine("[  Type  ] Rename reference to type: '" + type + "' to '" + newType + "'");
             newType = cm.getOrgName();
         }
 
         super.visitTypeInsn(opcode, newType);
+    }
+
+    @Override
+    public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
+        String newDesc = Utils.remapDesc(desc, mappings);
+
+        DeobferMain.LOGGER.fine("[ Locals ] Rename type of '" + name + "' from '" + desc + "' to '" + newDesc + "'");
+
+        super.visitLocalVariable(name, newDesc, signature, start, end, index);
     }
 
     @Override
@@ -105,7 +115,7 @@ public class MethodProcessor extends MethodVisitor {
                             newName = mm.getOrgName();
                 }
 
-                DeobferMain.LOGGER.info("[ Lambda ] Remapped handle to '" + newOwner + "::" + newName + "'");
+                DeobferMain.LOGGER.fine("[ Lambda ] Remapped handle to '" + newOwner + "::" + newName + "'");
 
                 newBsmArgs[i] = new Handle(handle.getTag(), newOwner, newName, Utils.remapDesc(handle.getDesc(), mappings), handle.isInterface());
             } else {

@@ -8,6 +8,7 @@ import me.geek.tom.deobfer.mappings.Mappings;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -45,8 +46,13 @@ public class DeobferMain {
 
         Files.walkFileTree(startDir.toPath(), walker);
 
-        for (Path p : walker.getFileQueue()) {
-            LOGGER.info("Remapping file: " + p.toString());
+
+        List<Path> queue = walker.getFileQueue();
+        int size = queue.size();
+        LOGGER.info("Found " + size + " files to remap!");
+        for (int i = 0; i < size; i++) {
+            Path p = queue.get(i);
+            LOGGER.info("Remapping file: " + p.toString() + " [ " + i + "/" + size + " | " + (int)((float)i/size * 100) + "% ]");
             doClassRenaming(p.toFile(), outputDir);
         }
     }
