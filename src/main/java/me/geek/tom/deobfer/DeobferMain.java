@@ -79,7 +79,7 @@ public class DeobferMain {
         }
     }
 
-    private void loadTinyMappings(File mappingsFile) throws IOException {
+    public void loadTinyMappings(File mappingsFile) throws IOException {
         mappings = Mappings.loadTinyMappings(mappingsFile);
 
         int classCount = mappings.getClasses().size();
@@ -124,7 +124,7 @@ public class DeobferMain {
         new FileOutputStream(output).write(out);
     }
 
-    private void loadSrgMappings(File mappingsFile) throws IOException {
+    public void loadSrgMappings(File mappingsFile) throws IOException {
         mappings = Mappings.loadSrgFromFile(mappingsFile);
 
         int classCount = mappings.getClasses().size();
