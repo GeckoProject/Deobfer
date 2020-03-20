@@ -2,6 +2,7 @@ package me.geek.tom.deobfer.asm;
 
 import me.geek.tom.deobfer.DeobferMain;
 import me.geek.tom.deobfer.Utils;
+import me.geek.tom.deobfer.mappings.ClassMapping;
 import me.geek.tom.deobfer.mappings.FieldMapping;
 import me.geek.tom.deobfer.mappings.Mappings;
 import me.geek.tom.deobfer.mappings.MethodMapping;
@@ -10,6 +11,7 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.objectweb.asm.Opcodes.ASM5;
@@ -38,11 +40,20 @@ public class ClassRenamer extends ClassVisitor {
         String newSuperName = superName;
         String[] newInterfaces = Arrays.copyOf(interfaces, interfaces.length);
 
-        if (this.mappings.findClass(name) == null)
+        ClassMapping classMapping = this.mappings.findClass(name);
+        if (classMapping == null)
+            try {
+                classMapping = this.mappings.findClass(name.substring(0, name.indexOf("$")));
+            } catch (IndexOutOfBoundsException ignored) {}
+
+        if (classMapping == null) {
             DeobferMain.LOGGER.info("No mappings for class: " + name);
+            fields = Collections.emptyList();
+            methods = Collections.emptyList();
+        }
         else {
-            this.fields = this.mappings.getFields().get(this.mappings.findClass(name));
-            this.methods = this.mappings.getMethods().get(this.mappings.findClass(name));
+            this.fields = this.mappings.getFields().get(classMapping);
+            this.methods = this.mappings.getMethods().get(classMapping);
 
             this.name = Utils.remapClassName(name, mappings);
 
@@ -65,7 +76,6 @@ public class ClassRenamer extends ClassVisitor {
 
     @Override
     public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-
         FieldMapping mapping = null;
         for (FieldMapping mp : fields) {
             if (mp.getObfName().equals(name)) {

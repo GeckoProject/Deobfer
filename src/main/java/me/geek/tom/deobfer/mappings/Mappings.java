@@ -4,6 +4,7 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class Mappings {
 
     private Mappings() {}
 
-    public static Mappings loadFromFile(File file) throws IOException {
+    public static Mappings loadSrgFromFile(File file) throws IOException {
         FileInputStream inputStream = new FileInputStream(file);
         List<String> lines = IOUtils.readLines(inputStream, Charset.defaultCharset());
 
@@ -66,6 +67,40 @@ public class Mappings {
 
                     ret.addMethod(new MethodMapping(orgName, obfName, desc, currentClass), currentClassMapping);
                 }
+            }
+        }
+
+        return ret;
+    }
+
+    public static Mappings loadTinyMappings(File file) throws IOException {
+        FileInputStream inputStream = new FileInputStream(file);
+        List<String> lines = IOUtils.readLines(inputStream, Charset.defaultCharset());
+
+        Mappings ret = new Mappings();
+
+        for (String line : lines) {
+            if (line.startsWith("#"))
+                continue;
+            if (line.startsWith("CLASS")) {
+                String[] parts = line.substring(6).split("\t");
+
+                String org = parts[1];
+                String obf = parts[0];
+                ret.addClass(new ClassMapping(org, obf));
+            } else if (line.startsWith("FIELD")) {
+                String[] parts = line.substring(6).split("\t");
+                String cls = parts[0];
+                String obf = parts[2];
+                String org = parts[3];
+                ret.addField(new FieldMapping(org, obf, cls), ret.findClass(cls));
+            } else if (line.startsWith("METHOD")) {
+                String[] parts = line.substring(7).split("\t");
+                String cls = parts[0];
+                String desc = parts[1];
+                String obf = parts[2];
+                String org = parts[3];
+                ret.addMethod(new MethodMapping(org, obf, desc, cls), ret.findClass(cls));
             }
         }
 

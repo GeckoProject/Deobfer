@@ -11,6 +11,7 @@ import me.geek.tom.deobfer.mappings.Mappings;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -40,11 +41,12 @@ public class DeobferMain {
     private void run(String[] args) throws Exception {
         LOGGER.info("Deobfer says: 'Hello, World!'");
 
-        OptionParser parser = new OptionParser();
+        OptionParser parser = new OptionParser("tiny");
         parser.allowsUnrecognizedOptions();
         OptionSpec<File> mappings = parser.accepts("mappings").withRequiredArg().ofType(File.class);
         OptionSpec<File> input = parser.accepts("input").withRequiredArg().ofType(File.class);
         OptionSpec<File> output = parser.accepts("output").withRequiredArg().ofType(File.class);
+        parser.acceptsAll(Arrays.asList("mappings-tiny-format", "tiny", "t"));
 
         OptionSet options = parser.parse(args);
         if (!options.has(mappings) || !options.has(input) || !options.has(output)) {
@@ -69,12 +71,25 @@ public class DeobferMain {
             if (!outputFile.exists())
                 outputFile.mkdirs();
 
-            loadMappings(mappingsFile);
+            if (!options.has("mappings-tiny-format"))
+                loadSrgMappings(mappingsFile);
+            else
+                loadTinyMappings(mappingsFile);
             walkTreeAndRemap(inputFile, outputFile);
         }
     }
 
-    private void walkTreeAndRemap(File startDir, File outputDir) throws IOException {
+    private void loadTinyMappings(File mappingsFile) throws IOException {
+        mappings = Mappings.loadTinyMappings(mappingsFile);
+
+        int classCount = mappings.getClasses().size();
+        int fieldCount = mappings.getFields().size();
+        int methodCount = mappings.getMethods().size();
+
+        LOGGER.info("Mappings found " + classCount + " classes, " + fieldCount + " fields and " + methodCount + " methods to rename");
+    }
+
+    public void walkTreeAndRemap(File startDir, File outputDir) throws IOException {
         RemappingTreeWalker walker = new RemappingTreeWalker();
 
         Files.walkFileTree(startDir.toPath(), walker);
@@ -109,8 +124,8 @@ public class DeobferMain {
         new FileOutputStream(output).write(out);
     }
 
-    private void loadMappings(File mappingsFile) throws IOException {
-        mappings = Mappings.loadFromFile(mappingsFile);
+    private void loadSrgMappings(File mappingsFile) throws IOException {
+        mappings = Mappings.loadSrgFromFile(mappingsFile);
 
         int classCount = mappings.getClasses().size();
         int fieldCount = mappings.getFields().size();
